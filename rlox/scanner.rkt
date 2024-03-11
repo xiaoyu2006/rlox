@@ -5,6 +5,11 @@
 (require racket/match)
 (require racket/list)
 
+;;; While the pattern matching is messy and unextensible, one can always have a better using FSM
+;;; and stuff, but its well beyond the scope of this project. So I'll just leave it here.
+
+;;; Also for anyone who is curious, grab the tiger book and read about lexing and parsing.
+
 (struct token (type lexeme literal line) #:transparent)
 
 (define (format-token t)
@@ -13,6 +18,10 @@
           (token-lexeme t)
           (token-literal t)
           (token-line t)))
+
+;; NOTE: Numbers as the first character of an identifier will be treated as a separate number token
+(define (char-id? ch)
+  (or (char-alphabetic? ch) (char=? ch #\_) (char-numeric? ch)))
 
 (define (scan-tokens source)
   (define (scan-token-iter consumed-src line)
@@ -73,6 +82,33 @@
            (unless converted  ; string->number gives #f when the string is not a valid number
              (raise-lox-error line (format "Invalid number: ~a" (list->string num))))
            (add-token 'number (list->string num) converted line rst)))]
+      ;; Identifier or keyword
+      [(cons d r) 
+       #:when (char-id? d)
+       (let-values ([(id rst) (seperate-while char-id? (cons d r))])
+         (let ([idstr (list->string id)])
+           (add-token (match idstr
+                        ["and" 'and]
+                        ["class" 'class]
+                        ["else" 'else]
+                        ["false" 'false]
+                        ["for" 'for]
+                        ["fun" 'fun]
+                        ["if" 'if]
+                        ["nil" 'nil]
+                        ["or" 'or]
+                        ["print" 'print]
+                        ["return" 'return]
+                        ["super" 'super]
+                        ["this" 'this]
+                        ["true" 'true]
+                        ["var" 'var]
+                        ["while" 'while]
+                        [else 'identifier])
+                      idstr
+                      idstr
+                      line
+                      rst)))]
       ;; Error handling
       [else (raise-lox-error line (format "Unexpected character: '~a'" (first consumed-src)))]))
   (scan-token-iter (string->list source) 1))

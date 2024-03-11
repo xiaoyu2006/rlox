@@ -2,12 +2,12 @@ on: [push, pull_request]
 name: CI
 jobs:
   build:
-    name: "Build on Racket, '${{ matrix.racket-os }}'"
+    name: "Build on Racket, '${{ matrix.os }}'"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3.1.0
       - uses: Bogdanp/setup-racket@v1.9.1
