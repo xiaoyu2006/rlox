@@ -1,0 +1,24 @@
+on: [push, pull_request]
+name: CI
+jobs:
+  build:
+    name: "Build on Racket, '${{ matrix.racket-os }}'"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - uses: Bogdanp/setup-racket@v1.9.1
+        with:
+          architecture: x64
+          distribution: full
+          variant: "CS"
+          version: "stable"
+      - name: Installing rlox and its dependencies
+        run: raco pkg install --no-docs --auto --name rlox
+      - name: Compiling rlox and building its docs
+        run: raco setup --check-pkg-deps --unused-pkg-deps rlox
+      - name: Testing rlox
+        run: raco test -x -p rlox
