@@ -3,6 +3,7 @@
 (require racket/file)
 (require "exn.rkt")
 (require "scanner.rkt")
+(require "parser.rkt")
 
 (define (run-file path)
   (let ([code (file->string path)])
@@ -17,6 +18,6 @@
         (loop)))))
 
 (define (run code)
-  (scan-tokens code))
+  (parse (scan-tokens code)))
 
 (provide run-file run-prompt)

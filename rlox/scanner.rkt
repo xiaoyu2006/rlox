@@ -30,7 +30,7 @@
             (scan-token-iter rest-source line)))
     (match consumed-src
       ;; EOF
-      ['() (token 'eof "" "" line)]
+      ['() (list (token 'eof "" "" line))]
       ;; Newline -> ignore and +1 line
       [(cons #\newline r) (scan-token-iter r (+ 1 line))]
       ;; Single character tokens
@@ -83,7 +83,7 @@
              (raise-lox-error line (format "Invalid number: ~a" (list->string num))))
            (add-token 'number (list->string num) converted line rst)))]
       ;; Identifier or keyword
-      [(cons d r) 
+      [(cons d r)
        #:when (char-id? d)
        (let-values ([(id rst) (seperate-while char-id? (cons d r))])
          (let ([idstr (list->string id)])
@@ -104,14 +104,29 @@
                         ["true" 'true]
                         ["var" 'var]
                         ["while" 'while]
-                        [else 'identifier])
+                        [_ 'identifier])
                       idstr
                       idstr
                       line
                       rst)))]
       ;; Error handling
-      [else (raise-lox-error line (format "Unexpected character: '~a'" (first consumed-src)))]))
+      [_ (raise-lox-error line (format "Unexpected character: '~a'" (first consumed-src)))]))
   (scan-token-iter (string->list source) 1))
+
+;; TODO: test cases
+
+(module+ test
+  (require rackunit))
+
+(module+ test
+  (check-equal?
+   (scan-tokens "var a = 1;")
+   (list (token 'var "var" "var" 1)
+         (token 'identifier "a" "a" 1)
+         (token 'equal "=" "" 1)
+         (token 'number "1" 1 1)
+         (token 'semicolon ";" "" 1)
+         (token 'eof "" "" 1))))
 
 (provide (struct-out token)
          format-token
